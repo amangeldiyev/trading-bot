@@ -24,7 +24,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('strategy:ema-indicator')->everyMinute();
+        // $schedule->command('strategy:ema-indicator')->everyMinute();
+        $schedule->command('account:track-pnl')->everyMinute();
     }
 
     /**

@@ -24,7 +24,11 @@ class BinanceController extends Controller
 
     public function dashboard()
     {
-        dd($this->averageDown(58325, 0.004, 56700, 0.001));
+        $binance = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
+
+        $result = $binance->user()->getAccount();
+
+        dd($result);
     }
 
     public function portfolio()
