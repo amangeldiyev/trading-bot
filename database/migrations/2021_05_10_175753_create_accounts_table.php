@@ -15,8 +15,8 @@ class CreateAccountsTable extends Migration
     {
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
-            $table->integer('wallet_balance');
-            $table->integer('unrealized_pnl');
+            $table->float('wallet_balance', 8, 2);
+            $table->float('unrealized_pnl', 8, 2);
             $table->timestamps();
         });
     }
