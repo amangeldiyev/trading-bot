@@ -26,6 +26,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('strategy:ema-indicator')->everyMinute();
         $schedule->command('account:track-pnl')->everyMinute();
+        $schedule->command('alert:price BTCUSDT 1m 500')->everyMinute();
     }
 
     /**

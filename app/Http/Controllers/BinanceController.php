@@ -26,9 +26,16 @@ class BinanceController extends Controller
     {
         $binance = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
 
-        $result = $binance->user()->getAccount();
+        // $result = $binance->user()->getAccount();
 
-        dd($result);
+        $result = $binance->market()->getKlines([
+            'symbol' => 'BTCUSDT',
+            'interval' =>  '1m',
+            'limit' => 10
+        ]);
+        // dd($result);
+
+        dd(array_slice($result, -2, 1)[0][4]);
     }
 
     public function portfolio()
