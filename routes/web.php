@@ -20,7 +20,4 @@ Route::get('/', function () {
 
 Route::get('/dashboard', [BinanceController::class, 'dashboard'])->name('dashboard');
 
-Route::get('/goal', [BinanceController::class, 'goal']);
-Route::get('/strategy', [BinanceController::class, 'strategy']);
-
 require __DIR__.'/auth.php';
