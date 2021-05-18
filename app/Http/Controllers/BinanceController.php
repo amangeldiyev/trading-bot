@@ -9,7 +9,6 @@ use Lin\Binance\BinanceFuture;
 
 class BinanceController extends Controller
 {
-
     protected $api;
 
     /**
@@ -26,13 +25,75 @@ class BinanceController extends Controller
     {
         $binance = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
 
-        $result = $binance->market()->getKlines([
-            'symbol' => 'BTCUSDT',
-            'interval' =>  '1m',
-            'limit' => 10
+        $result = $binance->market()->getPremiumIndex([
+            //'symbol'=>'BTCUSDT',
         ]);
 
-        dd(array_slice($result, -2, 1)[0][4]);
+        $highest_funding = 0;
+        $symbol = '';
+
+        foreach ($result as $coin) {
+            if ($highest_funding < $coin['lastFundingRate']) {
+                $highest_funding = $coin['lastFundingRate'];
+                $symbol = $coin['symbol'];
+            }
+
+            dump($coin['symbol'] . " with funding rate " . $coin['lastFundingRate']);
+        }
+        
+        dump("$symbol with highest funding $highest_funding");
+    }
+
+    public function start()
+    {
+        $binance = new Binance(config('services.binance.api'), config('services.binance.secret'));
+        $binance_futures = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
+
+        // Opening spot position
+        $result = $binance->trade()->postOrder([
+            'symbol'=>'SUSHIUSDT',
+            'side'=>'BUY',
+            'type'=>'MARKET',
+            'quantity'=>'1',
+        ]);
+
+        // Opening futures position
+        $result = $binance_futures->trade()->postOrder([
+            'symbol'=>'SUSHIUSDT',
+            'side'=>'SELL',
+            'type'=>'MARKET',
+            'positionSide' => 'Short',
+            'quantity'=>'1',
+        ]);
+    }
+
+    /**
+    * Description
+    *
+    * @return void
+    */
+    public function end()
+    {
+        $binance = new Binance(config('services.binance.api'), config('services.binance.secret'));
+        $binance_futures = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
+
+        // Closing spot position
+        $result = $binance->trade()->postOrder([
+            'symbol'=>'SUSHIUSDT',
+            'side'=>'SELL',
+            'type'=>'MARKET',
+            'quantity'=>'1',
+        ]);
+
+        // Closing futures position
+        $result = $binance_futures->trade()->postOrder([
+            'symbol'=>'SUSHIUSDT',
+            'side'=>'BUY',
+            'type'=>'MARKET',
+            'positionSide' => 'Short',
+            "closePosition" => true,
+            'quantity'=>'1',
+        ]);
     }
 
     public function portfolio()
@@ -46,7 +107,7 @@ class BinanceController extends Controller
         $iterations = 200;
         $monthly_deposit = 50;
 
-        for ($i=1; $i < $iterations; $i++) { 
+        for ($i=1; $i < $iterations; $i++) {
             if ($i % 30 == 0) {
                 $bank += $monthly_deposit;
                 dump("Depositing $monthly_deposit on iteration $i");

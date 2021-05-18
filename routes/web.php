@@ -20,4 +20,7 @@ Route::get('/', function () {
 
 Route::get('/dashboard', [BinanceController::class, 'dashboard'])->name('dashboard');
 
+Route::get('/start', [BinanceController::class, 'start']);
+Route::get('/end', [BinanceController::class, 'end']);
+
 require __DIR__.'/auth.php';
