@@ -48,26 +48,25 @@ class BinanceController extends Controller
     {
         $binance = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
 
-        $days = 180;
+        $days = 1009;
 
-        $investment = 10000 * 0.97;
-
-        // $investment = 6093;
+        $investment = 1000 * 1; // Deposit Comission.
 
         $result = $binance->market()->getFundingRate([
-            'symbol' => 'BTCUSDT',
+            'symbol' => 'ETHUSDT',
             'limit' => $days * 3
         ]);
 
         $total = 0;
 
-        foreach ($result as $rate) {
-            $total += $rate['fundingRate'];
+
+        foreach ($result as $rates) {
+            $total += $rates['fundingRate'];
         }
 
-        $return = $total * $investment * 0.8;
+        $return = $total * $investment * 0.8; // 80% - spot, 20% - futures
 
-        dd(($return + $investment - $investment * 0.00223) * 1);
+        dd(($return + $investment - $investment * 0.00223) * 1); // buy/sell order fees: 0.223%
     }
 
     public function start()
@@ -76,20 +75,16 @@ class BinanceController extends Controller
         $binance_futures = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
 
         // Opening spot position
-        $result = $binance->trade()->postOrder([
-            'symbol'=>'SUSHIUSDT',
-            'side'=>'BUY',
-            'type'=>'MARKET',
-            'quantity'=>'1',
-        ]);
+        //
+        
 
         // Opening futures position
         $result = $binance_futures->trade()->postOrder([
-            'symbol'=>'SUSHIUSDT',
+            'symbol'=>'ETHUSDT',
             'side'=>'SELL',
             'type'=>'MARKET',
             'positionSide' => 'Short',
-            'quantity'=>'1',
+            'quantity'=>'0.0335',
         ]);
     }
 
@@ -105,20 +100,20 @@ class BinanceController extends Controller
 
         // Closing spot position
         $result = $binance->trade()->postOrder([
-            'symbol'=>'SUSHIUSDT',
+            'symbol'=>'ETHUSDT',
             'side'=>'SELL',
             'type'=>'MARKET',
-            'quantity'=>'1',
+            'quantity'=>'0.0335',
         ]);
 
         // Closing futures position
         $result = $binance_futures->trade()->postOrder([
-            'symbol'=>'SUSHIUSDT',
+            'symbol'=>'ETHUSDT',
             'side'=>'BUY',
             'type'=>'MARKET',
             'positionSide' => 'Short',
             "closePosition" => true,
-            'quantity'=>'1',
+            'quantity'=>'0.0335',
         ]);
     }
 
