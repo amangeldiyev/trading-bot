@@ -44,6 +44,32 @@ class BinanceController extends Controller
         dump("$symbol with highest funding $highest_funding");
     }
 
+    public function fundingRates()
+    {
+        $binance = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
+
+        $days = 180;
+
+        $investment = 10000 * 0.97;
+
+        // $investment = 6093;
+
+        $result = $binance->market()->getFundingRate([
+            'symbol' => 'BTCUSDT',
+            'limit' => $days * 3
+        ]);
+
+        $total = 0;
+
+        foreach ($result as $rate) {
+            $total += $rate['fundingRate'];
+        }
+
+        $return = $total * $investment * 0.8;
+
+        dd(($return + $investment - $investment * 0.00223) * 1);
+    }
+
     public function start()
     {
         $binance = new Binance(config('services.binance.api'), config('services.binance.secret'));

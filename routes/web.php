@@ -20,6 +20,8 @@ Route::get('/', function () {
 
 Route::get('/dashboard', [BinanceController::class, 'dashboard'])->name('dashboard');
 
+Route::get('/funding-rates', [BinanceController::class, 'fundingRates']);
+
 Route::get('/start', [BinanceController::class, 'start']);
 Route::get('/end', [BinanceController::class, 'end']);
 
