@@ -101,52 +101,6 @@ class BinanceController extends Controller
         # code...
     }
 
-    public function goal()
-    {
-        $bank = 200;
-        $iterations = 200;
-        $monthly_deposit = 50;
-
-        for ($i=1; $i < $iterations; $i++) {
-            if ($i % 30 == 0) {
-                $bank += $monthly_deposit;
-                dump("Depositing $monthly_deposit on iteration $i");
-            }
-
-            $pnl = $bank * 0.02;
-
-            $bank += $pnl;
-
-            dump("$i: Bank should be $bank with pnl $pnl");
-        }
-
-        return $bank;
-    }
-
-    public function strategy()
-    {
-        $price = 58000;
-        $amount = 0.005;
-        $total_amount = $amount;
-        $price_interval = 2000;
-
-        $average_price = $this->averageDown($price, $amount, $price - $price_interval, $amount);
-        $price -= $price_interval;
-        $total_amount += $amount;
-
-        for ($i=0; $i < 3; $i++) {
-            $average_price = $this->averageDown($average_price, $amount, $price - $price_interval, $amount);
-            $price -= $price_interval;
-            $total_amount += $amount;
-            dump("buy $amount btc for $price");
-        }
-
-        $margin = $amount * $average_price;
-
-        dump("$total_amount btc with average price of $average_price");
-        dump("total margin of $margin");
-    }
-
     public function averageDown($first_price, $first_amount, $second_price, $second_amount)
     {
         return ($first_price * $first_amount + $second_price * $second_amount) / ($first_amount + $second_amount);
