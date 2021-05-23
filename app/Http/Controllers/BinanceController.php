@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Position;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Lin\Binance\Binance;
 use Lin\Binance\BinanceFuture;
 
@@ -23,50 +24,97 @@ class BinanceController extends Controller
 
     public function dashboard()
     {
-        $binance = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
+        return view('dashboard');
+    }
 
-        $result = $binance->market()->getPremiumIndex([
-            //'symbol'=>'BTCUSDT',
-        ]);
+    public function calculateProfit(Request $request)
+    {
+        $return = null;
+        $symbol = $request->symbol;
+        $bank = $request->bank;
+        $start = $request->start;
+        $days = $request->days;
 
-        $highest_funding = 0;
-        $symbol = '';
+        if ($request->isMethod('POST')) {
+            
+            $binance = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
 
-        foreach ($result as $coin) {
-            if ($highest_funding < $coin['lastFundingRate']) {
-                $highest_funding = $coin['lastFundingRate'];
-                $symbol = $coin['symbol'];
+            $startTime = Carbon::createFromFormat('Y-m-d', $request->start)->timestamp;
+
+            $days = $request->days;
+
+            $investment = $request->bank;
+
+            $result = $binance->market()->getFundingRate([
+                'symbol' => $request->symbol,
+                'startTime' => $startTime,
+                'limit' => $days * 3
+            ]);
+
+            $total = 0;
+
+            foreach ($result as $rates) {
+                $total += $rates['fundingRate'];
             }
 
-            dump($coin['symbol'] . " with funding rate " . $coin['lastFundingRate']);
+            $interest = $total * $investment * 0.8; // 80% - spot, 20% - futures
+
+            $return = $interest + $investment - $investment * 0.00223; // buy/sell order fees: 0.223%
+
         }
-        
-        dump("$symbol with highest funding $highest_funding");
+
+        return view('calculate-profit', compact('return', 'symbol', 'bank', 'start', 'days'));
     }
 
     public function fundingRates()
     {
         $binance = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
 
-        $days = 1009;
-
-        $investment = 1000 * 1; // Deposit Comission.
-
-        $result = $binance->market()->getFundingRate([
-            'symbol' => 'ETHUSDT',
-            'limit' => $days * 3
+        $result = $binance->market()->getPremiumIndex([
+            //'symbol'=>'BTCUSDT',
         ]);
 
-        $total = 0;
+        $highest_funding = [
+            'symbol' => 'BTCUSDT',
+            'value' => 0
+        ];
 
+        $lowest_funding = [
+            'symbol' => 'BTCUSDT',
+            'value' => 0
+        ];
 
-        foreach ($result as $rates) {
-            $total += $rates['fundingRate'];
+        foreach ($result as $coin) {
+            if ($highest_funding['value'] < $coin['lastFundingRate']) {
+                $highest_funding['symbol'] = $coin['symbol'];
+                $highest_funding['value'] = $coin['lastFundingRate'];
+            }
+
+            if ($lowest_funding['value'] > $coin['lastFundingRate']) {
+                $lowest_funding['symbol'] = $coin['symbol'];
+                $lowest_funding['value'] = $coin['lastFundingRate'];
+            }
         }
 
-        $return = $total * $investment * 0.8; // 80% - spot, 20% - futures
+        return view('funding-rates', compact('highest_funding', 'lowest_funding'));
+    }
 
-        dd(($return + $investment - $investment * 0.00223) * 1); // buy/sell order fees: 0.223%
+    public function buy()
+    {
+        $binance = new Binance(config('services.binance.api'), config('services.binance.secret'));
+        $binance_futures = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
+
+        $spot_account = $binance->user()->getAccount();
+
+        $spot_balance = Arr::where($spot_account['balances'], function ($value, $key) {
+            return $value['asset'] == 'USDT';
+        });
+
+        dd($spot_balance);
+
+        $funding_rates = $binance_futures->market()->getPremiumIndex();
+
+        return view('buy', compact('spot_balance', 'funding_rates'));
     }
 
     public function start()
@@ -74,17 +122,25 @@ class BinanceController extends Controller
         $binance = new Binance(config('services.binance.api'), config('services.binance.secret'));
         $binance_futures = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
 
+        $symbol = 'ETHUSDT';
+        $quantity = '0.12';
+
         // Opening spot position
-        //
+        $result = $binance->trade()->postOrder([
+            'symbol' => $symbol,
+            'side' => 'BUY',
+            'type' => 'MARKET',
+            'quantity' => $quantity,
+        ]);
         
 
         // Opening futures position
         $result = $binance_futures->trade()->postOrder([
-            'symbol'=>'ETHUSDT',
-            'side'=>'SELL',
-            'type'=>'MARKET',
+            'symbol' => $symbol,
+            'side' => 'SELL',
+            'type' => 'MARKET',
             'positionSide' => 'Short',
-            'quantity'=>'0.0335',
+            'quantity' => $quantity,
         ]);
     }
 
@@ -98,22 +154,25 @@ class BinanceController extends Controller
         $binance = new Binance(config('services.binance.api'), config('services.binance.secret'));
         $binance_futures = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
 
+        $symbol = 'BTCUSDT';
+        $quantity = '0.01';
+
         // Closing spot position
         $result = $binance->trade()->postOrder([
-            'symbol'=>'ETHUSDT',
-            'side'=>'SELL',
-            'type'=>'MARKET',
-            'quantity'=>'0.0335',
+            'symbol' => $symbol,
+            'side' => 'SELL',
+            'type' => 'MARKET',
+            'quantity' => $quantity,
         ]);
 
         // Closing futures position
         $result = $binance_futures->trade()->postOrder([
-            'symbol'=>'ETHUSDT',
-            'side'=>'BUY',
-            'type'=>'MARKET',
+            'symbol' => $symbol,
+            'side' => 'BUY',
+            'type' => 'MARKET',
             'positionSide' => 'Short',
-            "closePosition" => true,
-            'quantity'=>'0.0335',
+            'closePosition' => true,
+            'quantity' => $quantity,
         ]);
     }
 

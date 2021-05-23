@@ -25,4 +25,9 @@ Route::get('/funding-rates', [BinanceController::class, 'fundingRates']);
 Route::get('/start', [BinanceController::class, 'start']);
 Route::get('/end', [BinanceController::class, 'end']);
 
+Route::any('/calculate-profit', [BinanceController::class, 'calculateProfit'])->name('calculate-profit');
+Route::get('/funding-rates', [BinanceController::class, 'fundingRates'])->name('funding-rates');
+
+Route::get('/buy', [BinanceController::class, 'buy'])->name('buy');
+
 require __DIR__.'/auth.php';
