@@ -24,7 +24,21 @@ class BinanceController extends Controller
 
     public function dashboard()
     {
-        return view('dashboard');
+        $binance = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
+
+        $result1 = $binance->market()->getPremiumIndex([
+            'symbol'=>'ETHUSDT_210625',
+        ]);
+        $result2 = $binance->market()->getPremiumIndex([
+            'symbol'=>'ETHUSDT',
+        ]);
+
+
+        dump($result1);
+
+        dump($result2);
+
+        // return view('dashboard');
     }
 
     public function calculateProfit(Request $request)
@@ -36,7 +50,6 @@ class BinanceController extends Controller
         $days = $request->days;
 
         if ($request->isMethod('POST')) {
-            
             $binance = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
 
             $startTime = Carbon::createFromFormat('Y-m-d', $request->start)->timestamp;
@@ -60,7 +73,6 @@ class BinanceController extends Controller
             $interest = $total * $investment * 0.8; // 80% - spot, 20% - futures
 
             $return = $interest + $investment - $investment * 0.00223; // buy/sell order fees: 0.223%
-
         }
 
         return view('calculate-profit', compact('return', 'symbol', 'bank', 'start', 'days'));
@@ -123,23 +135,33 @@ class BinanceController extends Controller
         $binance_futures = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
 
         $symbol = 'ETHUSDT';
-        $quantity = '0.12';
+        $quarterly_symbol = 'ETHUSDT_210625';
+        $quantity = '1';
 
         // Opening spot position
-        $result = $binance->trade()->postOrder([
-            'symbol' => $symbol,
-            'side' => 'BUY',
-            'type' => 'MARKET',
-            'quantity' => $quantity,
-        ]);
+        // $result = $binance->trade()->postOrder([
+        //     'symbol' => $symbol,
+        //     'side' => 'BUY',
+        //     'type' => 'MARKET',
+        //     'quantity' => $quantity,
+        // ]);
         
 
-        // Opening futures position
+        // Opening futures short position
         $result = $binance_futures->trade()->postOrder([
             'symbol' => $symbol,
             'side' => 'SELL',
             'type' => 'MARKET',
             'positionSide' => 'Short',
+            'quantity' => $quantity,
+        ]);
+
+        // Opening futures quarterly long position
+        $result = $binance_futures->trade()->postOrder([
+            'symbol' => $quarterly_symbol,
+            'side' => 'BUY',
+            'type' => 'MARKET',
+            'positionSide' => 'Long',
             'quantity' => $quantity,
         ]);
     }
@@ -154,8 +176,8 @@ class BinanceController extends Controller
         $binance = new Binance(config('services.binance.api'), config('services.binance.secret'));
         $binance_futures = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
 
-        $symbol = 'BTCUSDT';
-        $quantity = '0.01';
+        $symbol = 'ADAUSDT';
+        $quantity = '90';
 
         // Closing spot position
         $result = $binance->trade()->postOrder([
