@@ -17,11 +17,11 @@
                     </x-nav-link>
                 </div>
                 
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                {{-- <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     <x-nav-link :href="route('funding-rates')" :active="request()->routeIs('funding-rates')">
                         Funding rates
                     </x-nav-link>
-                </div>
+                </div> --}}
 
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     <x-nav-link :href="route('total-funding-rate')" :active="request()->routeIs('total-funding-rate')">

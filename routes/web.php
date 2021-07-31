@@ -18,7 +18,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', [BinanceController::class, 'dashboard'])->name('dashboard');
+Route::get('/dashboard', [BinanceController::class, 'fundingRates'])->name('dashboard');
 
 Route::get('/funding-rates', [BinanceController::class, 'fundingRates'])->name('funding-rates');
 Route::match(['get', 'post'], '/total-funding-rate', [BinanceController::class, 'totalFundingRate'])->name('total-funding-rate');
