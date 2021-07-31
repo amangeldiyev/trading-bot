@@ -63,7 +63,7 @@ class PriceDifference extends Command
                                         ->first();
 
         if ($priceDifference) {
-            if ($difference - $priceDifference->diff <= $this->argument('difference')) {
+            if ($priceDifference->diff - $difference >= $this->argument('difference')) {
                 info("New price difference is $difference");
 
                 $priceDifference->diff = $difference;
