@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Lin\Binance\Binance;
 use Lin\Binance\BinanceFuture;
 
 class BinanceController extends Controller
@@ -24,28 +23,7 @@ class BinanceController extends Controller
 
     public function dashboard()
     {
-        $binance = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
-
-        $result = $binance->market()->getPremiumIndex();
-        // $result2 = $binance->market()->getPremiumIndex([
-        //     'symbol'=>'ETHUSDT',
-        // ]);
-
-        $first = Arr::first($result, function ($value, $key) {
-            return $value['symbol'] == 'ETHUSDT';
-        });
-
-        $second = Arr::first($result, function ($value, $key) {
-            return $value['symbol'] == 'ETHUSDT_210924';
-        });
-
-        dump($first);
-        dump($second);
-
-
-        // dump($result2);
-
-        // return view('dashboard');
+        return view('dashboard');
     }
 
     public function totalFundingRate(Request $request)
