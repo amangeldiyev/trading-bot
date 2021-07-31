@@ -20,14 +20,10 @@ Route::get('/', function () {
 
 Route::get('/dashboard', [BinanceController::class, 'dashboard'])->name('dashboard');
 
-Route::get('/funding-rates', [BinanceController::class, 'fundingRates']);
-
-Route::get('/start', [BinanceController::class, 'start']);
-Route::get('/end', [BinanceController::class, 'end']);
-
-Route::any('/calculate-profit', [BinanceController::class, 'calculateProfit'])->name('calculate-profit');
 Route::get('/funding-rates', [BinanceController::class, 'fundingRates'])->name('funding-rates');
+Route::match(['get', 'post'], '/total-funding-rate', [BinanceController::class, 'totalFundingRate'])->name('total-funding-rate');
 
-Route::get('/buy', [BinanceController::class, 'buy'])->name('buy');
+Route::match(['get', 'post'], '/position/open', [BinanceController::class, 'open'])->name('open');
+Route::match(['get', 'post'], '/position/close', [BinanceController::class, 'close'])->name('close');
 
 require __DIR__.'/auth.php';

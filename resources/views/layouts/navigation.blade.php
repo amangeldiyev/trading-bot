@@ -18,20 +18,26 @@
                 </div>
                 
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('calculate-profit')" :active="request()->routeIs('calculate-profit')">
-                        Calculate profit
-                    </x-nav-link>
-                </div>
-                
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     <x-nav-link :href="route('funding-rates')" :active="request()->routeIs('funding-rates')">
                         Funding rates
                     </x-nav-link>
                 </div>
+
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                    <x-nav-link :href="route('total-funding-rate')" :active="request()->routeIs('total-funding-rate')">
+                        Total funding rate
+                    </x-nav-link>
+                </div>
                 
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('buy')" :active="request()->routeIs('buy')">
-                        Buy
+                    <x-nav-link :href="route('open')" :active="request()->routeIs('open')">
+                        Open position
+                    </x-nav-link>
+                </div>
+
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                    <x-nav-link :href="route('close')" :active="request()->routeIs('close')">
+                        Close position
                     </x-nav-link>
                 </div>
             </div>

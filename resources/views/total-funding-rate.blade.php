@@ -14,7 +14,7 @@
 
                             <div class="flex justify-center">
                                 <div class="flex">
-                                    <h1 class="text-gray-600 font-bold md:text-2xl text-xl">Calculate return</h1>
+                                    <h1 class="text-gray-600 font-bold md:text-2xl text-xl">Total funding rate</h1>
                                 </div>
                             </div>
 
@@ -31,11 +31,7 @@
                                             <option value="ADAUSDT" {{$symbol == 'ADAUSDT' ? 'selected' : ''}}>ADAUSDT</option>
                                         </select>
                                     </div>
-                                    <div class="grid grid-cols-1">
-                                        <label class="uppercase md:text-sm text-xs text-gray-500 text-light font-semibold">Bank</label>
-                                        <input name="bank" class="py-2 px-3 rounded-lg border-2 border-purple-300 mt-1 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                                            type="number" value="{{$bank}}" placeholder="Bank" />
-                                    </div>
+                                    
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 mt-5 mx-7">
                                     <div class="grid grid-cols-1">
@@ -48,11 +44,7 @@
                                         <input name="end" class="py-2 px-3 rounded-lg border-2 border-purple-300 mt-1 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                                             type="date" value="{{$end}}" placeholder="End date" />
                                     </div>
-                                    <div class="grid grid-cols-1">
-                                        <label class="uppercase md:text-sm text-xs text-gray-500 text-light font-semibold">Days</label>
-                                        <input name="days" class="py-2 px-3 rounded-lg border-2 border-purple-300 mt-1 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                                            type="number" value="{{$days}}" placeholder="Days" />
-                                    </div>
+                                    
                                 </div>
 
 
@@ -62,13 +54,14 @@
                                 </div>
                             </form>
 
-                            @if ($return)
+                            @if ($total)
                                 <div class='flex items-center justify-center  md:gap-8 gap-4 pt-5 pb-5'>
                                     <p>
-                                        Estimated return: {{$return}}
+                                        Total funding rate for {{$symbol}}: {{$total * 100}}%
                                     </p>
                                 </div>
                             @endif
+
                         </div>
                     </div>
                 </div>
