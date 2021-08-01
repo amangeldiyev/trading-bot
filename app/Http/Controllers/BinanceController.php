@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Settings;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -178,5 +179,19 @@ class BinanceController extends Controller
         }
 
         return view('close', compact('difference'));
+    }
+
+    public function settings(Request $request)
+    {
+        $price_difference_interval = Settings::firstOrNew([
+            'name' => 'price_difference_interval'
+        ]);
+
+        if ($request->isMethod('POST')) {
+            $price_difference_interval->value = $request->price_difference_interval;
+            $price_difference_interval->save();
+        }
+
+        return view('settings', compact('price_difference_interval'));
     }
 }

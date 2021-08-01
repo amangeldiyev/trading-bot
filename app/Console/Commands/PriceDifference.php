@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\PriceDifference as ModelsPriceDifference;
+use App\Models\Settings;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Lin\Binance\BinanceFuture;
@@ -62,8 +63,10 @@ class PriceDifference extends Command
                                         ->where('second_symbol', 'ETHUSDT')
                                         ->first();
 
+        $interval = Settings::whereName('price_difference_interval')->first()->value;
+
         if ($priceDifference) {
-            if (abs($priceDifference->diff - $difference) >= $this->argument('difference')) {
+            if (abs($priceDifference->diff - $difference) >= $interval) {
                 info("New price difference is $difference");
 
                 $priceDifference->diff = $difference;
