@@ -51,7 +51,7 @@ class TrackPnl extends Command
 
             $pnl_diff = $unrealized_pnl - $account->unrealized_pnl;
 
-            if (abs($pnl_diff) > 10) {
+            if (abs($pnl_diff) > 20) {
                 info("Unrealized pnl change: $pnl_diff");
                 $account->update([
                     'wallet_balance' => $result['totalWalletBalance'],
@@ -65,8 +65,5 @@ class TrackPnl extends Command
                 'unrealized_pnl' => $unrealized_pnl
             ]);
         }
-
-
-        
     }
 }
