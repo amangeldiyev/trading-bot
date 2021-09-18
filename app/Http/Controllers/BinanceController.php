@@ -6,11 +6,13 @@ use App\Models\Settings;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Lin\Binance\BinanceDelivery;
 use Lin\Binance\BinanceFuture;
 
 class BinanceController extends Controller
 {
-    protected $api;
+    protected $futuresApi;
+    protected $deliveryApi;
 
     /**
      * Instantiate a new controller instance.
@@ -20,6 +22,10 @@ class BinanceController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+
+        $this->futuresApi = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
+
+        $this->deliveryApi = new BinanceDelivery(config('services.binance.api'), config('services.binance.secret'));
     }
 
     public function dashboard()
@@ -56,129 +62,105 @@ class BinanceController extends Controller
 
     public function fundingRates()
     {
-        $binance = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
+        $result = $this->futuresApi->market()->getPremiumIndex();
 
-        $result = $binance->market()->getPremiumIndex();
+        $btc_funding = $this->fundingRate($result, 'BTCUSDT');
 
-        $btc_funding = Arr::first($result, function ($value) {
-            return $value['symbol'] == 'BTCUSDT';
-        })['lastFundingRate'];
+        $eth_funding = $this->fundingRate($result, 'ETHUSDT');
 
-        $eth_funding = Arr::first($result, function ($value) {
-            return $value['symbol'] == 'ETHUSDT';
-        })['lastFundingRate'];
+        $sorted = collect($result)->sortBy('lastFundingRate');
 
-        $highest_funding = [
-            'symbol' => 'BTCUSDT',
-            'value' => 0
-        ];
+        $highest_funding = $sorted->last();
 
-        $lowest_funding = [
-            'symbol' => 'BTCUSDT',
-            'value' => 0
-        ];
-
-        foreach ($result as $coin) {
-            if ($highest_funding['value'] < $coin['lastFundingRate']) {
-                $highest_funding['symbol'] = $coin['symbol'];
-                $highest_funding['value'] = $coin['lastFundingRate'];
-            }
-
-            if ($lowest_funding['value'] > $coin['lastFundingRate']) {
-                $lowest_funding['symbol'] = $coin['symbol'];
-                $lowest_funding['value'] = $coin['lastFundingRate'];
-            }
-        }
+        $lowest_funding = $sorted->first();
 
         return view('funding-rates', compact('btc_funding', 'eth_funding', 'highest_funding', 'lowest_funding'));
     }
 
     public function open()
     {
-        $binance_futures = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
-
-        $result = $binance_futures->market()->getPremiumIndex();
-
-        $first_price = Arr::first($result, function ($value) {
-            return $value['symbol'] == 'ETHUSDT_210924';
-        })['markPrice'];
-
-        $second_price = Arr::first($result, function ($value) {
-            return $value['symbol'] == 'ETHUSDT';
-        })['markPrice'];
-
-        $difference = $first_price - $second_price;
+        $symbol = 'ETHUSDT';
+        $quarterly_symbol = 'ETHUSDT_210924';
 
         if (request()->isMethod('POST')) {
-            $symbol = 'ETHUSDT';
-            $quarterly_symbol = 'ETHUSDT_210924';
             $quantity = request('quantity');
 
             // Opening futures short position
-            $result = $binance_futures->trade()->postOrder([
-                'symbol' => $symbol,
-                'side' => 'SELL',
-                'type' => 'MARKET',
-                'positionSide' => 'Short',
-                'quantity' => $quantity,
-            ]);
+            $this->marketOrder($symbol, $quantity, 'SELL', 'Short');
 
             // Opening futures quarterly long position
-            $result = $binance_futures->trade()->postOrder([
-                'symbol' => $quarterly_symbol,
-                'side' => 'BUY',
-                'type' => 'MARKET',
-                'positionSide' => 'Long',
-                'quantity' => $quantity,
-            ]);
+            $this->marketOrder($quarterly_symbol, $quantity, 'BUY', 'Long');
         }
+
+        $difference = $this->priceDifference($quarterly_symbol, $symbol);
 
         return view('open', compact('difference'));
     }
 
     public function close()
     {
-        $binance_futures = new BinanceFuture(config('services.binance.api'), config('services.binance.secret'));
+        $symbol = 'ETHUSDT';
+        $quarterly_symbol = 'ETHUSDT_210924';
+
+        if (request()->isMethod('POST')) {
+            $quantity = request('quantity');
+
+            // Closing perpetual short position
+            $this->marketOrder($symbol, $quantity, 'BUY', 'Short');
+
+            // Closing quarterly long position
+            $this->marketOrder($quarterly_symbol, $quantity, 'SELL', 'Long');
+        }
+
+        $difference = $this->priceDifference($quarterly_symbol, $symbol);
+
+        return view('close', compact('difference'));
+    }
+
+    public function coinM()
+    {
+        return view('coin-m');
+    }
+
+    public function openCoinM()
+    {
+        $binance_futures = new BinanceDelivery(config('services.binance.api'), config('services.binance.secret'));
+        $symbol = 'XRPUSD_PERP';
+        $quarterly_symbol = 'XRPUSD_211231';
 
         $result = $binance_futures->market()->getPremiumIndex();
 
-        $first_price = Arr::first($result, function ($value) {
-            return $value['symbol'] == 'ETHUSDT_210924';
+        $first_price = Arr::first($result, function ($value) use ($quarterly_symbol) {
+            return $value['symbol'] == $quarterly_symbol;
         })['markPrice'];
 
-        $second_price = Arr::first($result, function ($value) {
-            return $value['symbol'] == 'ETHUSDT';
+        $second_price = Arr::first($result, function ($value) use ($symbol) {
+            return $value['symbol'] == $symbol;
         })['markPrice'];
 
         $difference = $first_price - $second_price;
 
-        if (request()->isMethod('POST')) {
-            $symbol = 'ETHUSDT';
-            $quarterly_symbol = 'ETHUSDT_210924';
-            $quantity = request('quantity');
+        $quantity = 25;
 
-            // Closing perpetual short position
-            $result = $binance_futures->trade()->postOrder([
-                'symbol' => $symbol,
-                'side' => 'BUY',
-                'type' => 'MARKET',
-                'positionSide' => 'Short',
-                // 'closePosition' => true,
-                'quantity' => $quantity,
-            ]);
+        // Opening futures short position
+        $result = $binance_futures->trade()->postOrder([
+            'symbol' => $symbol,
+            'side' => 'SELL',
+            'type' => 'MARKET',
+            'positionSide' => 'Short',
+            'quantity' => $quantity,
+        ]);
 
-            // Closing quarterly long position
-            $result = $binance_futures->trade()->postOrder([
-                'symbol' => $quarterly_symbol,
-                'side' => 'SELL',
-                'type' => 'MARKET',
-                'positionSide' => 'Long',
-                // 'closePosition' => true,
-                'quantity' => $quantity,
-            ]);
-        }
+        // Opening futures quarterly long position
+        $result = $binance_futures->trade()->postOrder([
+            'symbol' => $quarterly_symbol,
+            'side' => 'BUY',
+            'type' => 'MARKET',
+            'positionSide' => 'Long',
+            'quantity' => $quantity,
+        ]);
 
-        return view('close', compact('difference'));
+        dd($difference);
     }
 
     public function settings(Request $request)
@@ -193,5 +175,33 @@ class BinanceController extends Controller
         }
 
         return view('settings', compact('price_difference_interval'));
+    }
+
+    private function fundingRate($result, $symbol)
+    {
+        return Arr::first($result, fn($value) => $value['symbol'] == $symbol)['lastFundingRate'];
+    }
+
+    private function priceDifference($first_symbol, $second_symbol)
+    {
+        $result = $this->futuresApi->market()->getPremiumIndex();
+
+        $first_price = Arr::first($result, fn($value) => $value['symbol'] == $first_symbol)['markPrice'];
+
+        $second_price = Arr::first($result, fn($value) => $value['symbol'] == $second_symbol)['markPrice'];
+
+        return $first_price - $second_price;
+    }
+
+    private function marketOrder($symbol, $quantity, $side, $positionSide)
+    {
+        $this->futuresApi->trade()->postOrder([
+            'symbol' => $symbol,
+            'side' => $side,
+            'type' => 'MARKET',
+            'positionSide' => $positionSide,
+            // 'closePosition' => true,
+            'quantity' => $quantity,
+        ]);
     }
 }

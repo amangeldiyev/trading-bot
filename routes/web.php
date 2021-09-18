@@ -26,6 +26,9 @@ Route::match(['get', 'post'], '/total-funding-rate', [BinanceController::class, 
 Route::match(['get', 'post'], '/position/open', [BinanceController::class, 'open'])->name('open');
 Route::match(['get', 'post'], '/position/close', [BinanceController::class, 'close'])->name('close');
 
+Route::match(['get', 'post'], '/position/open-coin-m', [BinanceController::class, 'openCoinM'])->name('open-coin-m');
+// Route::match(['get', 'post'], '/position/close', [BinanceController::class, 'close'])->name('close');
+
 Route::match(['get', 'post'], '/settings', [BinanceController::class, 'settings'])->name('settings');
 
 require __DIR__.'/auth.php';

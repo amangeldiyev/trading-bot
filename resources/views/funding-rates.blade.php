@@ -12,10 +12,10 @@
                     </div>
                 </div>
                 <div class="p-6 bg-white border-b border-gray-200">
-                    <p>BTC funding: {{$btc_funding * 100}}%</p>
-                    <p>ETH funding: {{$eth_funding * 100}}%</p>
-                    <p>Highest funding - {{$highest_funding['symbol']}}: {{$highest_funding['value'] * 100}}%</p>
-                    <p>Lowest funding - {{$lowest_funding['symbol']}}: {{$lowest_funding['value'] * 100}}%</p>
+                    <p>BTC: <span class="font-bold text-purple-500">{{$btc_funding * 100}}%</span></p>
+                    <p>ETH: <span class="font-bold text-purple-500">{{$eth_funding * 100}}%</span></p>
+                    <p>&#8593; {{$highest_funding['symbol']}}: <span class="font-bold text-green-500">{{$highest_funding['lastFundingRate'] * 100}}%</span></p>
+                    <p>&#8595; {{$lowest_funding['symbol']}}: <span class="font-bold text-red-500">{{$lowest_funding['lastFundingRate'] * 100}}%</span></p>
                 </div>
             </div>
         </div>
