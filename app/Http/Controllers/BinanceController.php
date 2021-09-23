@@ -80,7 +80,7 @@ class BinanceController extends Controller
     public function open()
     {
         $symbol = 'ETHUSDT';
-        $quarterly_symbol = 'ETHUSDT_210924';
+        $quarterly_symbol = 'ETHUSDT_211231';
 
         if (request()->isMethod('POST')) {
             $quantity = request('quantity');
@@ -100,7 +100,7 @@ class BinanceController extends Controller
     public function close()
     {
         $symbol = 'ETHUSDT';
-        $quarterly_symbol = 'ETHUSDT_210924';
+        $quarterly_symbol = 'ETHUSDT_211231';
 
         if (request()->isMethod('POST')) {
             $quantity = request('quantity');
@@ -179,16 +179,16 @@ class BinanceController extends Controller
 
     private function fundingRate($result, $symbol)
     {
-        return Arr::first($result, fn($value) => $value['symbol'] == $symbol)['lastFundingRate'];
+        return Arr::first($result, fn ($value) => $value['symbol'] == $symbol)['lastFundingRate'];
     }
 
     private function priceDifference($first_symbol, $second_symbol)
     {
         $result = $this->futuresApi->market()->getPremiumIndex();
 
-        $first_price = Arr::first($result, fn($value) => $value['symbol'] == $first_symbol)['markPrice'];
+        $first_price = Arr::first($result, fn ($value) => $value['symbol'] == $first_symbol)['markPrice'];
 
-        $second_price = Arr::first($result, fn($value) => $value['symbol'] == $second_symbol)['markPrice'];
+        $second_price = Arr::first($result, fn ($value) => $value['symbol'] == $second_symbol)['markPrice'];
 
         return $first_price - $second_price;
     }
