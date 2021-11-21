@@ -4,8 +4,10 @@ namespace App\Console\Commands;
 
 use App\Models\PriceDifference as ModelsPriceDifference;
 use App\Models\Settings;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use Lin\Binance\BinanceFuture;
 
 class PriceDifference extends Command
@@ -67,13 +69,18 @@ class PriceDifference extends Command
 
         if ($priceDifference) {
             if (abs($priceDifference->diff - $difference) >= $interval) {
-                info("New price difference is $difference");
+                
+                $days = Carbon::now()->diffInDays(new Carbon('2021-12-31'));
+
+                $profit = $second_price * 0.0003 * ($days - 5) - $difference;
+
+                Log::channel('slack_general')->info("ETH price difference is $difference. Estimated profit with 0.01% funding: $profit");
 
                 $priceDifference->diff = $difference;
                 $priceDifference->save();
             }
         } else {
-            info("Price difference is $difference");
+            Log::channel('slack_general')->info("ETH price difference is $difference");
 
             ModelsPriceDifference::create([
                 'first_symbol' => 'ETHUSDT_210924',

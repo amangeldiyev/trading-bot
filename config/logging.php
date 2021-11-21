@@ -63,6 +63,15 @@ return [
             'short' => true
         ],
 
+        'slack_general' => [
+            'driver' => 'slack',
+            'url' => env('LOG_SLACK_WEBHOOK_URL_GENERAL'),
+            'username' => 'BOT',
+            'emoji' => ':boom:',
+            'level' => env('LOG_LEVEL', 'info'),
+            'short' => true
+        ],
+
         'papertrail' => [
             'driver' => 'monolog',
             'level' => env('LOG_LEVEL', 'debug'),
