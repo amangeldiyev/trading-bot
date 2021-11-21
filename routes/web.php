@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\BinanceController;
+use App\Http\Controllers\MarketDataController;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,7 +29,11 @@ Route::match(['get', 'post'], '/position/open', [BinanceController::class, 'open
 Route::match(['get', 'post'], '/position/close', [BinanceController::class, 'close'])->name('close');
 
 Route::match(['get', 'post'], '/position/open-coin-m', [BinanceController::class, 'openCoinM'])->name('open-coin-m');
-// Route::match(['get', 'post'], '/position/close', [BinanceController::class, 'close'])->name('close');
+
+Route::match(['get', 'post'], '/position/open-spot-futures', [BinanceController::class, 'openSpotFutures'])->name('open-spot-futures');
+Route::match(['get', 'post'], '/position/close-spot-futures', [BinanceController::class, 'closeSpotFutures'])->name('close-spot-futures');
+
+Route::get('/market/price-difference', [MarketDataController::class, 'priceDifference'])->name('market.price-difference');
 
 Route::match(['get', 'post'], '/settings', [BinanceController::class, 'settings'])->name('settings');
 
