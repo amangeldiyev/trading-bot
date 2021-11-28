@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\BinanceController;
 use App\Http\Controllers\MarketDataController;
-use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\TradeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,10 +30,19 @@ Route::match(['get', 'post'], '/position/close', [BinanceController::class, 'clo
 
 Route::match(['get', 'post'], '/position/open-coin-m', [BinanceController::class, 'openCoinM'])->name('open-coin-m');
 
-Route::match(['get', 'post'], '/position/open-spot-futures', [BinanceController::class, 'openSpotFutures'])->name('open-spot-futures');
 Route::match(['get', 'post'], '/position/close-spot-futures', [BinanceController::class, 'closeSpotFutures'])->name('close-spot-futures');
 
 Route::get('/market/price-difference', [MarketDataController::class, 'priceDifference'])->name('market.price-difference');
+
+// Trade routes
+Route::get('/trade', [TradeController::class, 'index']);
+
+Route::match(['get', 'post'], '/trade/open-spot-futures', [TradeController::class, 'openSpotFutures'])->name('open-spot-futures');
+
+Route::get('/trade/futures/reinvest', [TradeController::class, 'reinvestFutures']);
+Route::get('/trade/coin-m/reinvest', [TradeController::class, 'reinvestCoin']);
+
+Route::get('/trade/wash', [TradeController::class, 'wash']);
 
 Route::match(['get', 'post'], '/settings', [BinanceController::class, 'settings'])->name('settings');
 
