@@ -265,12 +265,19 @@ class BinanceController extends Controller
             'name' => 'price_difference_interval'
         ]);
 
+        $hedge_scalp_enabled = Settings::firstOrNew([
+            'name' => 'hedge_scalp_enabled'
+        ]);
+
         if ($request->isMethod('POST')) {
             $price_difference_interval->value = $request->price_difference_interval;
             $price_difference_interval->save();
+
+            $hedge_scalp_enabled->value = $request->hedge_scalp_enabled;
+            $hedge_scalp_enabled->save();
         }
 
-        return view('settings', compact('price_difference_interval'));
+        return view('settings', compact('price_difference_interval', 'hedge_scalp_enabled'));
     }
 
     private function fundingRate($result, $symbol)
