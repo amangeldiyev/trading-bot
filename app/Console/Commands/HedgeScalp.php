@@ -63,10 +63,27 @@ class HedgeScalp extends Command
         ]);
 
         if (empty($orders)) {
-            // check position size
+            // check current positions
+            $position = $this->getPosition($symbol);
 
-            // create order
-            $this->createOrders($symbol, $range, $spread, $quantity);
+            if ($position['entryPrice'] != 0) {
+                $this->api->trade()->postOrder([
+                    'symbol' => $symbol,
+                    'side' => 'BUY',
+                    'type' => 'LIMIT',
+                    'positionSide' => 'Short',
+                    'price' => $position['entryPrice'] - $spread,
+                    'quantity' => abs($position['positionAmt']),
+                    'timeInForce' => 'GTC',
+                    'recvWindow' => 10000
+                ]);
+
+                info('Position cleared!');
+            } else {
+                // create order
+                $this->createOrders($symbol, $range, $spread, $quantity);
+            }
+
         } elseif (count($orders) == 2) {
 
             // Mark Price
@@ -75,18 +92,20 @@ class HedgeScalp extends Command
             // check order price and mark price
             if ($orders[0]['price'] - $price > $reactivationDiff) {
                 // cancel orders
-                info('canceling orders');
                 foreach ($orders as $order) {
-                    $result = $this->api->trade()->deleteOrder([
-                        'symbol' => $symbol,
-                        'orderId' => $order['orderId']
-                    ]);
+                    $this->cancelOrder($symbol, $order['orderId']);
                 }
 
                 $this->createOrders($symbol, $range, $spread, $quantity);
             }
-        } else {
-            $this->info('do nothing');
+        } elseif (count($orders) == 1) {
+            $position = $this->getPosition($symbol);
+
+            // if no position found cancel order
+            if ($position['entryPrice'] == 0) {
+                $this->cancelOrder($symbol, $orders[0]['orderId']);
+                info('Position not found!');
+            }
         }
     }
 
@@ -96,8 +115,6 @@ class HedgeScalp extends Command
 
         $price = round($price, 1) + $range;
 
-        info('creating orders');
-
         $this->api->trade()->postOrder([
             'symbol' => $symbol,
             'side' => 'SELL',
@@ -105,8 +122,7 @@ class HedgeScalp extends Command
             'positionSide' => 'Short',
             'price' => $price,
             'quantity' => $quantity,
-            'timeInForce' => 'GTC',
-            'recvWindow' => 10000
+            'timeInForce' => 'GTC'
         ]);
 
         $this->api->trade()->postOrder([
@@ -126,5 +142,21 @@ class HedgeScalp extends Command
         $result = $this->api->market()->getPremiumIndex();
 
         return Arr::first($result, fn($value) => $value['symbol'] == $symbol)['markPrice'];
+    }
+
+    private function cancelOrder($symbol, $orderId)
+    {
+        $this->api->trade()->deleteOrder([
+            'symbol' => $symbol,
+            'orderId' => $orderId
+        ]);
+    }
+
+    private function getPosition($symbol)
+    {
+        // check current positions
+        $response = $this->api->user()->getAccount();
+
+        return Arr::first($response['positions'], fn($value) => ($value['symbol'] == $symbol && $value['positionSide'] == 'SHORT'));
     }
 }
