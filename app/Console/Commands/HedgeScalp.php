@@ -47,7 +47,6 @@ class HedgeScalp extends Command
         $is_enabled = Settings::where('name', 'hedge_scalp_enabled')->where('value', 1)->first();
         
         if (!$is_enabled) {
-            info('disabled');
             return 0;
         }
 
@@ -64,6 +63,9 @@ class HedgeScalp extends Command
         ]);
 
         if (empty($orders)) {
+            // check position size
+
+            // create order
             $this->createOrders($symbol, $range, $spread, $quantity);
         } elseif (count($orders) == 2) {
 
