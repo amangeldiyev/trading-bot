@@ -84,16 +84,16 @@ class BinanceController extends Controller
     public function open()
     {
         $symbol = 'ETHUSDT';
-        $quarterly_symbol = 'ETHUSDT_211231';
+        $quarterly_symbol = 'ETHUSDT_220325';
 
         if (request()->isMethod('POST')) {
             $quantity = request('quantity');
 
-            // Opening futures short position
-            $this->marketOrder($symbol, $quantity, 'SELL', 'Short');
-
             // Opening futures quarterly long position
             $this->marketOrder($quarterly_symbol, $quantity, 'BUY', 'Long');
+
+            // Opening futures short position
+            $this->marketOrder($symbol, $quantity, 'SELL', 'Short', 10000);
         }
 
         $difference = $this->priceDifference($quarterly_symbol, $symbol);
@@ -104,7 +104,7 @@ class BinanceController extends Controller
     public function close()
     {
         $symbol = 'ETHUSDT';
-        $quarterly_symbol = 'ETHUSDT_211231';
+        $quarterly_symbol = 'ETHUSDT_220325';
 
         if (request()->isMethod('POST')) {
             $quantity = request('quantity');
@@ -113,7 +113,7 @@ class BinanceController extends Controller
             $this->marketOrder($symbol, $quantity, 'BUY', 'Short');
 
             // Closing quarterly long position
-            $this->marketOrder($quarterly_symbol, $quantity, 'SELL', 'Long');
+            $this->marketOrder($quarterly_symbol, $quantity, 'SELL', 'Long', 10000);
         }
 
         $difference = $this->priceDifference($quarterly_symbol, $symbol);
@@ -296,7 +296,7 @@ class BinanceController extends Controller
         return $first_price - $second_price;
     }
 
-    private function marketOrder($symbol, $quantity, $side, $positionSide)
+    private function marketOrder($symbol, $quantity, $side, $positionSide, $recvWindow = 5000)
     {
         $this->futuresApi->trade()->postOrder([
             'symbol' => $symbol,
@@ -305,6 +305,7 @@ class BinanceController extends Controller
             'positionSide' => $positionSide,
             // 'closePosition' => true,
             'quantity' => $quantity,
+            'recvWindow' => $recvWindow
         ]);
     }
 }
